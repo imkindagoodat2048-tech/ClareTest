@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>test</title>
-<!-- BASICS -->
     <style>
         body {
             margin: 0;
@@ -25,12 +24,13 @@
             font-size: 20px;
             text-align: center;
         }
+
         #gifgifgif {
+            display: none; /* starts hidden */
             width: 100vw; 
             height: auto;
         }
     </style>
-
 </head>
 <body>
 
@@ -40,16 +40,19 @@
 
     <script>
         let count = 0;
-        document.getElementById('baseBtn').onclick = () => {
+
+        document.getElementById('baseBtn').onclick = function() {
             count = count + 1;
-            document.getElementById('display').innerText = `you need ${100 - count} more`;
-            if (count >= 100) {
-              setTimeout(() => {
-                document.getElementById("gifgifgif").src = "assets/freeze.png";
-              }, 1000);
-            };
-                
-                
+            document.getElementById('display').innerText = "you need " + (100 - count) + " more";
+
+            if (count == 100) {
+                document.getElementById('display').innerText = "done";
+                document.getElementById('gifgifgif').style.display = "block";
+
+                setTimeout(function() {
+                    document.getElementById('gifgifgif').src = "assets/freeze.png";
+                }, 1000);
+            }
         };
     </script>
 
