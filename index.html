@@ -26,9 +26,17 @@
         }
 
         #gifgifgif {
-            display: none; /* starts hidden */
-            width: 100%; 
-            height: auto;
+            display: none;
+            position: fixed;
+            width: 100vw; 
+            height: 100vh;
+        }
+
+        #freeze {
+            display: none;
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
         }
     </style>
 </head>
@@ -37,6 +45,7 @@
     <button id="baseBtn">test button</button>
     <span id="display">you need 100 more</span>
     <img id="gifgifgif" src="assets/expo.gif">
+    <img id="freeze" src="assets/freeze.png">
 
     <script>
         let count = 0;
@@ -50,7 +59,7 @@
                 document.getElementById('gifgifgif').style.display = "block";
 
                 setTimeout(function() {
-                    document.getElementById('gifgifgif').src = "assets/freeze.png";
+                    document.getElementById('gifgifgif').src = document.getElementById('freeze');
                 }, 833);
             }
         };
