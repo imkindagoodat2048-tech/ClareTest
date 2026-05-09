@@ -25,6 +25,10 @@
             font-size: 20px;
             text-align: center;
         }
+        #gifgifgif {
+            width: 100vw; 
+            height: auto;
+        }
     </style>
 
 </head>
@@ -32,6 +36,7 @@
 
     <button id="baseBtn">test button</button>
     <span id="display">you need 100 more</span>
+    <img id="gifgifgif" src="assets/animation.gif">
 
     <script>
         let count = 0;
@@ -39,7 +44,9 @@
             count = count + 1;
             document.getElementById('display').innerText = `you need ${100 - count} more`;
             if (count >= 0) {
-            console.log("Coming Soon")
+              setTimeout(() => {
+                document.getElementById("gifgifgif").src = "assets/freeze.png";
+              }, 1000);
             };
                 
                 
