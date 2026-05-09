@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>test</title>
-
-    <!-- basically just a normal button test idrc -->
+<!-- BASICS -->
     <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
         #baseBtn {
-            width: 60px;
+            width: 80px;
             height: 30px;
-            font-size: 10px;
-            margin: auto; 
+            font-size: 12px;
         }
 
         #display {
-            width: 30px;
-            height: 30px;
-            font-size: 15px;
-            display: block;
-            margin: auto;
+            font-size: 20px;
             text-align: center;
         }
     </style>
@@ -30,8 +34,7 @@
     <span id="display">0</span>
 
     <script>
-
-let count = 0
+        let count = 0;
         document.getElementById('baseBtn').onclick = () => {
             count = count + 1;
             document.getElementById('display').innerText = count;
