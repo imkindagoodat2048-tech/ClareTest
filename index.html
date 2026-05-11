@@ -167,20 +167,17 @@ async function runPython(code, out) {
   out.textContent = 'Loading Python runtime...';
   try {
     const py = await ensurePyodide();
-    py.runPython(`
-import sys, io
-sys.stdout = io.StringIO()
-sys.stderr = io.StringIO()
-`);
+    const lines = [];
+    py.setStdout({ batched: (s) => lines.push(s) });
+    py.setStderr({ batched: (s) => lines.push(s) });
     try {
-      py.runPython(code);
-      const stdout = py.runPython('sys.stdout.getvalue()');
-      const stderr = py.runPython('sys.stderr.getvalue()');
-      out.textContent = (stdout + stderr).trim() || '(no output)';
+      await py.runPythonAsync(code);
     } catch(e) {
-      const stderr = py.runPython('sys.stderr.getvalue()');
-      out.textContent = stderr.trim() || e.message;
+      lines.push(e.message);
     }
+    out.textContent = lines.join('\n').trim() || '(no output)';
+    py.setStdout(null);
+    py.setStderr(null);
   } catch(e) { out.textContent = 'Error loading Python: ' + e.message; }
 }
 
