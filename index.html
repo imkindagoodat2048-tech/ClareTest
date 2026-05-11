@@ -1,74 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>test</title>
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #baseBtn {
-            width: 80px;
-            height: 30px;
-            font-size: 12px;
-        }
-
-        #display {
-            font-size: 20px;
-            text-align: center;
-        }
-
-    #gifgifgif {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        object-fit: cover; 
-        object-position: center; 
-        z-index: 999;
-}
-
-        #freeze {
-            display: none;
-            position: fixed;
-            width: 100vw;
-            height: 100vh;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Multicompiler</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Times New Roman', Times, serif; padding: 40px; background: white; color: black; }
+  h1 { font-size: 20px; margin-bottom: 20px; }
+  #lang-select { display: flex; flex-direction: column; gap: 8px; max-width: 200px; }
+  #lang-select button {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 16px;
+    padding: 6px 10px;
+    background: white;
+    border: 1px solid black;
+    cursor: pointer;
+    text-align: left;
+  }
+  #lang-select button:hover { background: #eee; }
+  #compiler { display: none; }
+  #compiler-title { font-size: 18px; margin-bottom: 10px; }
+  #code-input {
+    width: 100%;
+    height: 300px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px solid black;
+    padding: 8px;
+    resize: vertical;
+  }
+  #run-btn {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 16px;
+    padding: 6px 20px;
+    background: white;
+    border: 1px solid black;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  #run-btn:hover { background: #eee; }
+  #output-label { margin-top: 16px; margin-bottom: 6px; font-size: 16px; }
+  #output {
+    width: 100%;
+    height: 200px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px solid black;
+    padding: 8px;
+    background: white;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+  #back-btn {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px;
+    padding: 4px 12px;
+    background: white;
+    border: 1px solid black;
+    cursor: pointer;
+    margin-top: 12px;
+  }
+  #back-btn:hover { background: #eee; }
+  #ts-notice { font-size: 13px; margin-top: 6px; color: #333; }
+</style>
 </head>
 <body>
 
-    <button id="baseBtn">test button</button>
-    <span id="display">you need 100 more</span>
-    <img id="gifgifgif" src="assets/expo.gif">
-    <img id="freeze" src="assets/freeze.png">
+<div id="lang-select">
+  <h1>Multicompiler</h1>
+  <button onclick="selectLang('Python')">Python</button>
+  <button onclick="selectLang('JavaScript')">JavaScript</button>
+  <button onclick="selectLang('TypeScript')">TypeScript</button>
+  <button onclick="selectLang('Java')">Java</button>
+  <button onclick="selectLang('Lua')">Lua</button>
+</div>
 
-    <script>
-        let count = 0;
+<div id="compiler">
+  <div id="compiler-title"></div>
+  <textarea id="code-input" placeholder="Write your code here..."></textarea>
+  <div id="ts-notice" style="display:none;">TypeScript will be transpiled to JS and run in the browser.</div>
+  <br>
+  <button id="run-btn" onclick="runCode()">Run</button>
+  <div id="output-label">Output:</div>
+  <div id="output"></div>
+  <br>
+  <button id="back-btn" onclick="goBack()">← Back</button>
+</div>
 
-        document.getElementById('baseBtn').onclick = function() {
-            count = count + 1;
-            document.getElementById('display').innerText = "you need " + (100 - count) + " more";
+<!-- TypeScript compiler -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typescript/5.4.5/typescript.min.js"></script>
+<!-- Fengari Lua WASM -->
+<script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
 
-            if (count == 100) {
-                document.getElementById('display').innerText = "done";
-                document.getElementById('gifgifgif').style.display = "block";
+<script>
+let currentLang = '';
 
-                setTimeout(function() {
-                    document.getElementById('gifgifgif').src = document.getElementById('freeze').src;
-                }, 833);
-            }
-        };
-    </script>
+function selectLang(lang) {
+  currentLang = lang;
+  document.getElementById('lang-select').style.display = 'none';
+  document.getElementById('compiler').style.display = 'block';
+  document.getElementById('compiler-title').textContent = lang;
+  document.getElementById('output').textContent = '';
+  document.getElementById('code-input').value = '';
+  document.getElementById('ts-notice').style.display = lang === 'TypeScript' ? 'block' : 'none';
+}
 
+function goBack() {
+  document.getElementById('compiler').style.display = 'none';
+  document.getElementById('lang-select').style.display = 'flex';
+}
+
+function runCode() {
+  const code = document.getElementById('code-input').value;
+  const out = document.getElementById('output');
+  out.textContent = '';
+
+  if (!code.trim()) { out.textContent = '(no code)'; return; }
+
+  if (currentLang === 'JavaScript') runJS(code, out);
+  else if (currentLang === 'TypeScript') runTS(code, out);
+  else if (currentLang === 'Python') runPython(code, out);
+  else if (currentLang === 'Java') runJava(code, out);
+  else if (currentLang === 'Lua') runLua(code, out);
+}
+
+// ── JavaScript ──────────────────────────────────────────────
+function runJS(code, out) {
+  const logs = [];
+  const fakeConsole = { log: (...a) => logs.push(a.map(String).join(' ')), error: (...a) => logs.push('Error: ' + a.map(String).join(' ')), warn: (...a) => logs.push('Warn: ' + a.map(String).join(' ')) };
+  try {
+    const fn = new Function('console', code);
+    fn(fakeConsole);
+    out.textContent = logs.join('\n') || '(no output)';
+  } catch(e) { out.textContent = 'Error: ' + e.message; }
+}
+
+// ── TypeScript ───────────────────────────────────────────────
+function runTS(code, out) {
+  try {
+    const js = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2017 } }).outputText;
+    runJS(js, out);
+  } catch(e) { out.textContent = 'TS Error: ' + e.message; }
+}
+
+// ── Python (via Pyodide) ─────────────────────────────────────
+let pyodide = null;
+let pyodideLoading = false;
+let pyodideQueue = [];
+
+async function ensurePyodide() {
+  if (pyodide) return pyodide;
+  if (!window.loadPyodide) {
+    // Dynamically load pyodide
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/' });
+  return pyodide;
+}
+
+async function runPython(code, out) {
+  out.textContent = 'Loading Python runtime...';
+  try {
+    const py = await ensurePyodide();
+    py.runPython(`
+import sys, io
+sys.stdout = io.StringIO()
+sys.stderr = io.StringIO()
+`);
+    try {
+      py.runPython(code);
+      const stdout = py.runPython('sys.stdout.getvalue()');
+      const stderr = py.runPython('sys.stderr.getvalue()');
+      out.textContent = (stdout + stderr).trim() || '(no output)';
+    } catch(e) {
+      const stderr = py.runPython('sys.stderr.getvalue()');
+      out.textContent = stderr.trim() || e.message;
+    }
+  } catch(e) { out.textContent = 'Error loading Python: ' + e.message; }
+}
+
+// ── Java (interpreted subset via API) ────────────────────────
+async function runJava(code, out) {
+  out.textContent = 'Running...';
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a Java interpreter. The user will give you Java code. Execute it mentally and return ONLY the console output the code would produce, nothing else. No explanation, no markdown, no code blocks. If there is an error, return just the error message.`,
+        messages: [{ role: 'user', content: code }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '(no output)';
+    out.textContent = text.trim();
+  } catch(e) { out.textContent = 'Error: ' + e.message; }
+}
+
+// ── Lua (via Fengari) ────────────────────────────────────────
+function runLua(code, out) {
+  // Fengari exposes fengari and lua globals after loading
+  try {
+    const logs = [];
+    // Fengari-web auto-runs script tags, but we can use its API directly
+    if (typeof fengari === 'undefined' && typeof Fengari === 'undefined') {
+      out.textContent = 'Lua runtime not loaded yet, please try again.';
+      return;
+    }
+
+    // Use Fengari's JS API
+    const L = fengari.lauxlib.luaL_newstate();
+    fengari.lualib.luaL_openlibs(L);
+
+    // Override print
+    const lua = fengari.lua;
+    const lauxlib = fengari.lauxlib;
+    const lualib = fengari.lualib;
+    const { to_jsstring, to_luastring } = fengari;
+
+    lua.lua_pushcfunction(L, (state) => {
+      const n = lua.lua_gettop(state);
+      const parts = [];
+      for (let i = 1; i <= n; i++) {
+        lauxlib.luaL_tolstring(state, i, null);
+        parts.push(to_jsstring(lua.lua_tostring(state, -1)));
+        lua.lua_pop(state, 1);
+      }
+      logs.push(parts.join('\t'));
+      return 0;
+    });
+    lua.lua_setglobal(L, to_luastring('print'));
+
+    const status = lauxlib.luaL_dostring(L, to_luastring(code));
+    if (status !== 0) {
+      const err = to_jsstring(lua.lua_tostring(L, -1));
+      out.textContent = 'Lua error: ' + err;
+    } else {
+      out.textContent = logs.join('\n') || '(no output)';
+    }
+  } catch(e) { out.textContent = 'Lua error: ' + e.message; }
+}
+</script>
 </body>
 </html>
